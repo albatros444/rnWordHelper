@@ -11,42 +11,15 @@ import { Image } from "expo-image";
 import { useEffect, useState } from "react";
 import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 
-import {
-  useLLM,
-  LLAMA3_2_1B,
-  LLAMA3_2_TOKENIZER,
-  LLAMA3_2_TOKENIZER_CONFIG,
-
-} from 'react-native-executorch';
-
-
-
 
 
 export default function HomeScreen() {
   const [inputText, setInputText] = useState<string>("");
   const [words, setWords] = useState<string[]>([]);
   const [activeWordInd, setActiveWordInd] = useState<null | number>(null);
-
-  const llm = useLLM({
-    modelSource: LLAMA3_2_1B,
-    tokenizerSource: LLAMA3_2_TOKENIZER,
-    tokenizerConfigSource: LLAMA3_2_TOKENIZER_CONFIG,
-  });
-
-
-const talkToLLM = () =>{
-  const chat = [
-      { role: 'system', content: 'You are a helpful assistant' },
-      { role: 'user', content: 'Hi!' },
-      { role: 'assistant', content: 'Hi!, how can I help you?'},
-      { role: 'user', content: `Give me 5 simple sentences using the word ${words[activeWordInd]}. Give no explanations. Don't use synonyms.` },
-    ];
+  const [gigaSentences,setGigaSentences]= useState([])
   
-    // Chat completion
-  llm.generate(chat);
-}
-
+  // console.log("hello")
   useEffect(() => {
     const getWords = async () => {
       const storageItems: string | null = await AsyncStorage.getItem(
@@ -94,6 +67,32 @@ const talkToLLM = () =>{
     await AsyncStorage.removeItem("currentWordInd");
     setActiveWordInd(null);
   };
+  
+  const getResponse = ()=>{
+    console.log("touched")
+    try{
+      fetch('http://192.168.0.102:3000',
+        {
+      method: 'POST', 
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ // Convert the payload to a JSON string
+        wordForSentences: activeWordInd!==null&&words[activeWordInd]
+      }),
+    }
+  )
+      .then(response=>response.text())
+      .then(data=>{
+        console.log("data from Giga:", data)
+        const splSentences = data.split(/[1-5]./)
+
+        setGigaSentences(splSentences)
+      })
+    }catch(err){
+      console.log(err)
+    }
+  }
 
   return (
     <ParallaxScrollView
@@ -120,8 +119,8 @@ const talkToLLM = () =>{
       {/* save buttons  */}
       <View style={styles.buttonsContainer}>
         <TouchableOpacity
+        onPress={getResponse}
           style={[buttonStyle.button, { width: "45%" }]}
-          onPress={talkToLLM}
         >
           <Text style={buttonStyle.buttonText}>Get response</Text>
         </TouchableOpacity>
@@ -137,16 +136,11 @@ const talkToLLM = () =>{
         activeWordInd={activeWordInd}
         setActiveWordInd={setActiveWordInd}
       />
-      
-      <Text style={styles.responseText}>{llm.isGenerating&&!llm.response?"...wait":llm.response}</Text>
-      
-
-
-      {/* {words.map((word, i) => (
+      {gigaSentences.map((word, i) => (
         <View key={i}>
-          <Text>{word}</Text>
+          <Text style={styles.responseText}>{word}</Text>
         </View>
-      ))} */}
+      ))}
     </ParallaxScrollView>
   );
 }
@@ -183,7 +177,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   responseText: {
-    marginBlock: 20,
+   
     fontSize: 18
   }
 });
