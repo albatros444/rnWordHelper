@@ -17,7 +17,11 @@ export default function HomeScreen() {
   const [inputText, setInputText] = useState<string>("");
   const [words, setWords] = useState<string[]>([]);
   const [activeWordInd, setActiveWordInd] = useState<null | number>(null);
-  const [gigaSentences,setGigaSentences]= useState([])
+  //gigaChat responses
+  const [gigaResponse,setGigaResponse]= useState([])
+  ///
+
+
   
   // console.log("hello")
   useEffect(() => {
@@ -68,26 +72,53 @@ export default function HomeScreen() {
     setActiveWordInd(null);
   };
   
-  const getResponse = ()=>{
+  const getSentences = ()=>{
     console.log("touched")
     try{
-      fetch('http://192.168.0.102:3000',
+      fetch('http://192.168.0.102:3000', 
+      // fetch("http://77.222.47.206:3000",
         {
       method: 'POST', 
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ // Convert the payload to a JSON string
+        type: "sentences",
         wordForSentences: activeWordInd!==null&&words[activeWordInd]
       }),
     }
   )
-      .then(response=>response.text())
+      .then(response=>response.json())
       .then(data=>{
         console.log("data from Giga:", data)
-        const splSentences = data.split(/[1-5]./)
+        setGigaResponse(data)
+      })
+    }catch(err){
+      console.log(err)
+    }
+  }
+  
 
-        setGigaSentences(splSentences)
+  const getDefinition = ()=>{
+    console.log("touched")
+    try{
+      fetch('http://192.168.0.102:3000', 
+      // fetch("http://77.222.47.206:3000",
+        {
+      method: 'POST', 
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ // Convert the payload to a JSON string
+        type: "definition",
+        wordForDefinition: activeWordInd!==null&&words[activeWordInd]
+      }),
+    }
+  )
+      .then(response=>response.json())
+      .then(data=>{
+        console.log("data from Giga:", data)
+        setGigaResponse(data)
       })
     }catch(err){
       console.log(err)
@@ -119,7 +150,7 @@ export default function HomeScreen() {
       {/* save buttons  */}
       <View style={styles.buttonsContainer}>
         <TouchableOpacity
-        onPress={getResponse}
+        onPress={getSentences}
           style={[buttonStyle.button, { width: "45%" }]}
         >
           <Text style={buttonStyle.buttonText}>Get response</Text>
@@ -130,17 +161,26 @@ export default function HomeScreen() {
         >
           <Text style={buttonStyle.buttonText}>Delete All</Text>
         </TouchableOpacity>
+         <TouchableOpacity
+          style={[buttonStyle.button, { width: "45%" }]}
+          onPress={getDefinition}
+        >
+          <Text style={buttonStyle.buttonText}>What's this</Text>
+        </TouchableOpacity>
       </View>
       <WordsNavigator
         words={words}
         activeWordInd={activeWordInd}
         setActiveWordInd={setActiveWordInd}
       />
-      {gigaSentences.map((word, i) => (
+      {(gigaResponse.type==="sentences")&&gigaResponse.response.map((word, i) => (
         <View key={i}>
           <Text style={styles.responseText}>{word}</Text>
         </View>
       ))}
+      {gigaResponse.type==="definition"&&<View>
+          <Text style={styles.responseText}>{gigaResponse.response}</Text>
+        </View>}
     </ParallaxScrollView>
   );
 }
@@ -173,6 +213,7 @@ const styles = StyleSheet.create({
   buttonsContainer: {
     flex: 1,
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 13,
     justifyContent: "center",
   },
