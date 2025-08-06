@@ -6,6 +6,7 @@ export const buttonStyle = StyleSheet.create({
     textAlign: "center",
   },
   button: {
+    height: 50,
     backgroundColor: "#ff7",
     paddingVertical: 7,
     borderRadius: 10,

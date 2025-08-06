@@ -1,29 +1,31 @@
-import { HelloWave } from "@/components/HelloWave";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
 import WordsNavigator from "@/components/WordsNavigator";
 import { buttonStyle } from "@/styles/buttonStyle";
+import { inputArea } from "@/styles/inputArea";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Text } from "@react-navigation/elements";
-import { Image } from "expo-image";
-
+import { useFonts } from "expo-font";
 import { useEffect, useState } from "react";
 import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import { ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Montserrat_600SemiBold } from "@expo-google-fonts/montserrat";
 
-
+const colors = {
+  bg: "hsl(51 30% 95%)",
+};
 
 export default function HomeScreen() {
   const [inputText, setInputText] = useState<string>("");
   const [words, setWords] = useState<string[]>([]);
   const [activeWordInd, setActiveWordInd] = useState<null | number>(null);
-  //gigaChat responses
-  const [gigaResponse,setGigaResponse]= useState([])
-  ///
+  const [gigaResponse, setGigaResponse] = useState([]);
 
-
-  
   // console.log("hello")
+
+  const [loaded, error] = useFonts({
+    // Montserrat: require("../../assets/fonts/Montserrat.ttf"),
+    Montserrat_600SemiBold,
+  });
   useEffect(() => {
     const getWords = async () => {
       const storageItems: string | null = await AsyncStorage.getItem(
@@ -71,154 +73,142 @@ export default function HomeScreen() {
     await AsyncStorage.removeItem("currentWordInd");
     setActiveWordInd(null);
   };
-  
-  const getSentences = ()=>{
-    console.log("touched")
-    try{
-      fetch('http://192.168.0.102:3000', 
-      // fetch("http://77.222.47.206:3000",
-        {
-      method: 'POST', 
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ // Convert the payload to a JSON string
-        type: "sentences",
-        wordForSentences: activeWordInd!==null&&words[activeWordInd]
-      }),
-    }
-  )
-      .then(response=>response.json())
-      .then(data=>{
-        console.log("data from Giga:", data)
-        setGigaResponse(data)
-      })
-    }catch(err){
-      console.log(err)
-    }
-  }
-  
 
-  const getDefinition = ()=>{
-    console.log("touched")
-    try{
-      fetch('http://192.168.0.102:3000', 
-      // fetch("http://77.222.47.206:3000",
+  const getSentences = () => {
+    console.log("touched");
+    try {
+      fetch(
+        "http://192.168.0.102:3000",
+        // fetch("http://77.222.47.206:3000",
         {
-      method: 'POST', 
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ // Convert the payload to a JSON string
-        type: "definition",
-        wordForDefinition: activeWordInd!==null&&words[activeWordInd]
-      }),
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            // Convert the payload to a JSON string
+            type: "sentences",
+            wordForSentences: activeWordInd !== null && words[activeWordInd],
+          }),
+        }
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("data from Giga:", data);
+          setGigaResponse(data);
+        });
+    } catch (err) {
+      console.log(err);
     }
-  )
-      .then(response=>response.json())
-      .then(data=>{
-        console.log("data from Giga:", data)
-        setGigaResponse(data)
-      })
-    }catch(err){
-      console.log(err)
+  };
+
+  const getDefinition = () => {
+    console.log("touched");
+    try {
+      fetch(
+        "http://192.168.0.102:3000",
+        // fetch("http://77.222.47.206:3000",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            // Convert the payload to a JSON string
+            type: "definition",
+            wordForDefinition: activeWordInd !== null && words[activeWordInd],
+          }),
+        }
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("data from Giga:", data);
+          setGigaResponse(data);
+        });
+    } catch (err) {
+      console.log(err);
     }
-  }
+  };
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
-      headerImage={
-        <Image
-          source={require("@/assets/images/partial-react-logo.png")}
-          style={styles.reactLogo}
-        />
-      }
-    >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Add the word</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <View>
+    <SafeAreaView style={styles.safeAreaView}>
+      <View style={inputArea.inputArea}>
+        <Text
+          style={[inputArea.title, { fontFamily: "Montserrat_600SemiBold" }]}
+        >
+          Add the word
+        </Text>
         <TextInput
-          style={styles.input}
+          style={inputArea.input}
           value={inputText}
           onChangeText={setInputText}
           onSubmitEditing={saveWord}
         />
       </View>
-      {/* save buttons  */}
-      <View style={styles.buttonsContainer}>
-        <TouchableOpacity
-        onPress={getSentences}
-          style={[buttonStyle.button, { width: "45%" }]}
-        >
-          <Text style={buttonStyle.buttonText}>Get response</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[buttonStyle.button, { width: "45%" }]}
-          onPress={deleteAll}
-        >
-          <Text style={buttonStyle.buttonText}>Delete All</Text>
-        </TouchableOpacity>
-         <TouchableOpacity
-          style={[buttonStyle.button, { width: "45%" }]}
-          onPress={getDefinition}
-        >
-          <Text style={buttonStyle.buttonText}>What's this</Text>
-        </TouchableOpacity>
-      </View>
-      <WordsNavigator
-        words={words}
-        activeWordInd={activeWordInd}
-        setActiveWordInd={setActiveWordInd}
-      />
-      {(gigaResponse.type==="sentences")&&gigaResponse.response.map((word, i) => (
-        <View key={i}>
-          <Text style={styles.responseText}>{word}</Text>
+      <View style={styles.allButtons}>
+        {/* save buttons  */}
+        <View style={styles.buttonsContainer}>
+          <TouchableOpacity
+            onPress={getSentences}
+            style={[buttonStyle.button, { width: "45%" }]}
+          >
+            <Text style={buttonStyle.buttonText}>Get response</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[buttonStyle.button, { width: "45%" }]}
+            onPress={deleteAll}
+          >
+            <Text style={buttonStyle.buttonText}>Delete All</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[buttonStyle.button, { width: "45%" }]}
+            onPress={getDefinition}
+          >
+            <Text style={buttonStyle.buttonText}>What's this</Text>
+          </TouchableOpacity>
         </View>
-      ))}
-      {gigaResponse.type==="definition"&&<View>
+        <WordsNavigator
+          words={words}
+          activeWordInd={activeWordInd}
+          setActiveWordInd={setActiveWordInd}
+        />
+      </View>
+      {gigaResponse.type === "sentences" &&
+        gigaResponse.response.map((word, i) => (
+          <ScrollView key={i}>
+            <Text style={styles.responseText}>{word}</Text>
+          </ScrollView>
+        ))}
+      {gigaResponse.type === "definition" && (
+        <ScrollView>
           <Text style={styles.responseText}>{gigaResponse.response}</Text>
-        </View>}
-    </ParallaxScrollView>
+        </ScrollView>
+      )}
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  safeAreaView: {
+    backgroundColor: "hsl(51 30% 95%)",
+    flex: 1,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: "absolute",
-  },
-  input: {
-    height: "auto",
-    borderWidth: 1,
-    borderColor: "black",
-    borderRadius: 5,
-    fontSize: 20,
-    justifyContent: "center",
+
+  allButtons: {
+    // borderWidth: 1, ////$$
+    // borderColor: "red", ///$$
+    flex: 1,
+    marginHorizontal: 20,
+    paddingBlock: 30,
   },
   buttonsContainer: {
     flex: 1,
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 13,
     justifyContent: "center",
+    gap: 13,
   },
   responseText: {
-   
-    fontSize: 18
-  }
+    fontSize: 18,
+  },
 });
