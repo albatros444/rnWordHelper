@@ -1,11 +1,25 @@
+import {
+  FlatList,
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
 import { buttonStyle } from "@/styles/buttonStyle";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import Animated, {
   useAnimatedStyle,
   LightSpeedInRight,
   LightSpeedInLeft,
+  useSharedValue,
+  withTiming,
 } from "react-native-reanimated";
 
 type navigatorProps = {
@@ -13,13 +27,31 @@ type navigatorProps = {
   activeWordInd: number | null;
   setActiveWordInd: Dispatch<SetStateAction<number | null>>;
 };
+////word///
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const WORD_WIDTH = SCREEN_WIDTH - 120; //20+20 margin on buttons container
+// console.log(SCREEN_WIDTH, WORD_WIDTH); //40+40 side elements
 
+////////////
 function WordsNavigator({
   words,
   activeWordInd,
   setActiveWordInd,
 }: navigatorProps) {
   // console.log("active ind", activeWordInd);
+  const [currentPage, setCurrentPage] = useState(0);
+  const offset = useSharedValue({ x: 0, y: 0 });
+  const animatedStylesProbe = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: offset.value.x }],
+    };
+  });
+
+  const doubleTap = Gesture.Pan()
+    .onStart((e) => {})
+    .onUpdate((e) => {
+      offset.value = { x: e.translationX };
+    });
 
   const [enterFrom, setEnterFrom] = useState("left");
 
@@ -61,51 +93,54 @@ function WordsNavigator({
     }
   };
 
-  const AnimatedText = Animated.createAnimatedComponent(Text);
+  // const AnimatedText = Animated.createAnimatedComponent(Text);
   return (
-    <View style={{ flex: 1 }}>
-      <View style={styles.wordsNumbersContainer}>
-        <Text>
-          {activeWordInd === null ? 0 : activeWordInd + 1}/{words.length}
-        </Text>
-      </View>
-      <View style={styles.buttonsContainer}>
-        <TouchableOpacity
-          style={[buttonStyle.button, { width: "15%", zIndex: 10 }]}
-          onPress={prev}
-        >
-          <Text style={buttonStyle.buttonText}>{"<<"}</Text>
-        </TouchableOpacity>
-        {/* //WORDs/ */}
-        <Animated.View>
-          <AnimatedText
-            entering={
-              enterFrom === "left"
-                ? LightSpeedInRight.withInitialValues({
-                    opacity: 0,
-                    transform: [{ translateX: 100 }, { skewX: "45deg" }],
-                  })
-                : LightSpeedInLeft.withInitialValues({
-                    opacity: 0,
-                    transform: [{ translateX: -100 }, { skewX: "45deg" }],
-                  })
-            }
-            style={styles.word}
+    <GestureHandlerRootView>
+      <View style={{ flex: 1 }}>
+        <View style={styles.wordsNumbersContainer}>
+          <Text>
+            {currentPage + 1} / {words.length}
+          </Text>
+        </View>
+        <View style={styles.buttonsContainer}>
+          <TouchableOpacity
+            style={[buttonStyle.button, { width: 40, zIndex: 10 }]}
+            onPress={prev}
           >
-            {activeWordInd !== null && words[activeWordInd]}
-          </AnimatedText>
-        </Animated.View>
-        {/* //WORDs/ */}
-        <TouchableOpacity
-          style={[buttonStyle.button, { width: "15%", zIndex: 10 }]}
-          onPress={next}
-        >
-          <Text style={buttonStyle.buttonText}>{">>"}</Text>
-        </TouchableOpacity>
+            <Text style={buttonStyle.buttonText}>{"<<"}</Text>
+          </TouchableOpacity>
+          {/* //WORDs/ */}
+          {/* <GestureDetector gesture={doubleTap}> */}
+          <FlatList
+            data={words}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            pagingEnabled
+            decelerationRate="normal"
+            onMomentumScrollEnd={(event) => {
+              const contentOffset = event.nativeEvent.contentOffset;
+              // console.log(contentOffset.x, WORD_WIDTH);
+              // Calculate current page
+              const page = Math.ceil(Math.floor(contentOffset.x) / WORD_WIDTH);
+              setCurrentPage(page);
+            }}
+            renderItem={(word) => (
+              <Text style={[styles.word]}>{word.item}</Text>
+            )}
+          ></FlatList>
+          {/* //WORDs/ */}
+          <TouchableOpacity
+            style={[buttonStyle.button, { width: 40, zIndex: 10 }]}
+            onPress={next}
+          >
+            <Text style={buttonStyle.buttonText}>{">>"}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </GestureHandlerRootView>
   );
 }
+
 const styles = StyleSheet.create({
   buttonsContainer: {
     // flex: 1,
@@ -113,12 +148,22 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     flexDirection: "row",
-    gap: 13,
+  },
+
+  flatList: {
+    // borderColor: "red", borderWidth: 1
   },
   word: {
+    width: WORD_WIDTH,
+    height: 50,
     fontSize: 20,
     textAlign: "center",
+    textAlignVertical: "center",
+    paddingHorizontal: 10,
+    // borderColor: "green",
+    // borderWidth: 1,
   },
+
   wordsNumbersContainer: {
     // flex: 1,
     justifyContent: "center",

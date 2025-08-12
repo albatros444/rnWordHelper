@@ -1,6 +1,8 @@
 //
-to start: npm run android
-npm run servStart
+to start app: npm run android
+to start server: npm run servStart
+to rebuild: npx expo prebuild
+npx expo start ??
 //
 was created metro.config.js and added:
 defaultConfig.resolver.assetExts.push('pte')
@@ -12,7 +14,7 @@ can't change recommended limits of ubuntu for mongodb:
 ///
 fonts:
 npx expo install @expo-google-fonts/montserrat
-import { Quicksand_600semibold } from "@expo-google-fonts/montserrat;
+import { Montserrat_600semibold } from "@expo-google-fonts/montserrat;
 const [fontsLoaded] = useFonts({
 Montserrat_600SemiBold
 });

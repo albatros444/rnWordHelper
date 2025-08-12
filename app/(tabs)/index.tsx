@@ -1,3 +1,4 @@
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import WordsNavigator from "@/components/WordsNavigator";
 import { buttonStyle } from "@/styles/buttonStyle";
 import { inputArea } from "@/styles/inputArea";
@@ -68,10 +69,10 @@ export default function HomeScreen() {
     }
   };
   const deleteAll = async () => {
-    await AsyncStorage.removeItem("wordHelperWords");
-    setWords([]);
-    await AsyncStorage.removeItem("currentWordInd");
-    setActiveWordInd(null);
+    // await AsyncStorage.removeItem("wordHelperWords");
+    // setWords([]);
+    // await AsyncStorage.removeItem("currentWordInd");
+    // setActiveWordInd(null);
   };
 
   const getSentences = () => {
@@ -132,58 +133,60 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safeAreaView}>
-      <View style={inputArea.inputArea}>
-        <Text
-          style={[inputArea.title, { fontFamily: "Montserrat_600SemiBold" }]}
-        >
-          Add the word
-        </Text>
-        <TextInput
-          style={inputArea.input}
-          value={inputText}
-          onChangeText={setInputText}
-          onSubmitEditing={saveWord}
-        />
-      </View>
-      <View style={styles.allButtons}>
-        {/* save buttons  */}
-        <View style={styles.buttonsContainer}>
-          <TouchableOpacity
-            onPress={getSentences}
-            style={[buttonStyle.button, { width: "45%" }]}
+      <GestureHandlerRootView>
+        <View style={inputArea.inputArea}>
+          <Text
+            style={[inputArea.title, { fontFamily: "Montserrat_600SemiBold" }]}
           >
-            <Text style={buttonStyle.buttonText}>Get response</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[buttonStyle.button, { width: "45%" }]}
-            onPress={deleteAll}
-          >
-            <Text style={buttonStyle.buttonText}>Delete All</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[buttonStyle.button, { width: "45%" }]}
-            onPress={getDefinition}
-          >
-            <Text style={buttonStyle.buttonText}>What's this</Text>
-          </TouchableOpacity>
+            Add the word
+          </Text>
+          <TextInput
+            style={inputArea.input}
+            value={inputText}
+            onChangeText={setInputText}
+            onSubmitEditing={saveWord}
+          />
         </View>
-        <WordsNavigator
-          words={words}
-          activeWordInd={activeWordInd}
-          setActiveWordInd={setActiveWordInd}
-        />
-      </View>
-      {gigaResponse.type === "sentences" &&
-        gigaResponse.response.map((word, i) => (
-          <ScrollView key={i}>
-            <Text style={styles.responseText}>{word}</Text>
+        <View style={styles.allButtons}>
+          {/* save buttons  */}
+          <View style={styles.buttonsContainer}>
+            <TouchableOpacity
+              onPress={getSentences}
+              style={[buttonStyle.button, { width: "45%" }]}
+            >
+              <Text style={buttonStyle.buttonText}>Get response</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[buttonStyle.button, { width: "45%" }]}
+              onPress={deleteAll}
+            >
+              <Text style={buttonStyle.buttonText}>Delete All</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[buttonStyle.button, { width: "45%" }]}
+              onPress={getDefinition}
+            >
+              <Text style={buttonStyle.buttonText}>What's this</Text>
+            </TouchableOpacity>
+          </View>
+          <WordsNavigator
+            words={words}
+            activeWordInd={activeWordInd}
+            setActiveWordInd={setActiveWordInd}
+          />
+        </View>
+        {gigaResponse.type === "sentences" &&
+          gigaResponse.response.map((word, i) => (
+            <ScrollView key={i}>
+              <Text style={styles.responseText}>{word}</Text>
+            </ScrollView>
+          ))}
+        {gigaResponse.type === "definition" && (
+          <ScrollView>
+            <Text style={styles.responseText}>{gigaResponse.response}</Text>
           </ScrollView>
-        ))}
-      {gigaResponse.type === "definition" && (
-        <ScrollView>
-          <Text style={styles.responseText}>{gigaResponse.response}</Text>
-        </ScrollView>
-      )}
+        )}
+      </GestureHandlerRootView>
     </SafeAreaView>
   );
 }
