@@ -2,7 +2,7 @@ import { HelloWave } from "@/components/HelloWave";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import WordsNavigator from "@/components/WordsNavigator";
+// import WordsNavigator from "@/components/WordsNavigator";
 import { buttonStyle } from "@/styles/buttonStyle";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Text } from "@react-navigation/elements";
@@ -16,12 +16,7 @@ import {
   LLAMA3_2_1B,
   LLAMA3_2_TOKENIZER,
   LLAMA3_2_TOKENIZER_CONFIG,
-
-} from 'react-native-executorch';
-
-
-
-
+} from "react-native-executorch";
 
 export default function HomeScreen() {
   const [inputText, setInputText] = useState<string>("");
@@ -34,18 +29,20 @@ export default function HomeScreen() {
     tokenizerConfigSource: LLAMA3_2_TOKENIZER_CONFIG,
   });
 
-
-const talkToLLM = () =>{
-  const chat = [
-      { role: 'system', content: 'You are a helpful assistant' },
-      { role: 'user', content: 'Hi!' },
-      { role: 'assistant', content: 'Hi!, how can I help you?'},
-      { role: 'user', content: `Give me 5 simple sentences using the word ${words[activeWordInd]}. Give no explanations. Don't use synonyms.` },
+  const talkToLLM = () => {
+    const chat = [
+      { role: "system", content: "You are a helpful assistant" },
+      { role: "user", content: "Hi!" },
+      { role: "assistant", content: "Hi!, how can I help you?" },
+      {
+        role: "user",
+        content: `Give me 5 simple sentences using the word ${words[activeWordInd]}. Give no explanations. Don't use synonyms.`,
+      },
     ];
-  
+
     // Chat completion
-  llm.generate(chat);
-}
+    llm.generate(chat);
+  };
 
   useEffect(() => {
     const getWords = async () => {
@@ -132,15 +129,15 @@ const talkToLLM = () =>{
           <Text style={buttonStyle.buttonText}>Delete All</Text>
         </TouchableOpacity>
       </View>
-      <WordsNavigator
+      {/* <WordsNavigator
         words={words}
         activeWordInd={activeWordInd}
         setActiveWordInd={setActiveWordInd}
-      />
-      
-      <Text style={styles.responseText}>{llm.isGenerating&&!llm.response?"...wait":llm.response}</Text>
-      
+      /> */}
 
+      <Text style={styles.responseText}>
+        {llm.isGenerating && !llm.response ? "...wait" : llm.response}
+      </Text>
 
       {/* {words.map((word, i) => (
         <View key={i}>
@@ -184,6 +181,6 @@ const styles = StyleSheet.create({
   },
   responseText: {
     marginBlock: 20,
-    fontSize: 18
-  }
+    fontSize: 18,
+  },
 });

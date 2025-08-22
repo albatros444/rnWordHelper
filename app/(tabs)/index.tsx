@@ -1,11 +1,11 @@
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import WordsNavigator from "@/components/WordsNavigator";
+import { FlatList, GestureHandlerRootView } from "react-native-gesture-handler";
+import WordsNavigator from "@/components/wordsNavigator/WordsNavigator";
 import { buttonStyle } from "@/styles/buttonStyle";
 import { inputArea } from "@/styles/inputArea";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Text } from "@react-navigation/elements";
 import { useFonts } from "expo-font";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 import { ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -18,10 +18,8 @@ const colors = {
 export default function HomeScreen() {
   const [inputText, setInputText] = useState<string>("");
   const [words, setWords] = useState<string[]>([]);
-  const [activeWordInd, setActiveWordInd] = useState<null | number>(null);
+  const [activeWord, setActiveWord] = useState<null | number>(null);
   const [gigaResponse, setGigaResponse] = useState([]);
-
-  // console.log("hello")
 
   const [loaded, error] = useFonts({
     // Montserrat: require("../../assets/fonts/Montserrat.ttf"),
@@ -37,46 +35,48 @@ export default function HomeScreen() {
         setWords(items);
       }
     };
-    const getInd = async () => {
-      const ind: string | null = await AsyncStorage.getItem("currentWordInd");
-      if (ind) {
-        //"0", "1"...
-        const i = JSON.parse(ind);
-        setActiveWordInd(i);
-      }
-    };
     getWords();
-    getInd();
     // main();
   }, []);
 
   const saveWord = async () => {
     if (inputText) {
       try {
-        setWords((words) => [...words, inputText]);
-        await AsyncStorage.setItem(
-          "wordHelperWords",
-          JSON.stringify([...words, inputText])
-        );
-        setInputText("");
-        if (activeWordInd === null) {
-          await AsyncStorage.setItem("currentWordInd", "0");
-          setActiveWordInd(0);
+        ///check for repeat
+        const isThere = words.find((word) => word === inputText.trim());
+        ///don't save if repeated
+        if (isThere) {
+          console.log("You repeated word");
+          setInputText("");
+        }
+        ///save word
+        if (isThere === undefined) {
+          setWords((words) => [...words, inputText]);
+          await AsyncStorage.setItem(
+            "wordHelperWords",
+            JSON.stringify([...words, inputText])
+          );
+          setInputText("");
+          ///create active word cash in storage on first word
+          if (activeWord === null) {
+            await AsyncStorage.setItem("currentWord", "0");
+            setActiveWord(0);
+          }
         }
       } catch (error) {
         console.log(error);
       }
     }
   };
-  const deleteAll = async () => {
-    // await AsyncStorage.removeItem("wordHelperWords");
-    // setWords([]);
-    // await AsyncStorage.removeItem("currentWordInd");
-    // setActiveWordInd(null);
-  };
+
+  // const deleteAll = async () => {
+  // await AsyncStorage.removeItem("wordHelperWords");
+  // setWords([]);
+  // await AsyncStorage.removeItem("currentWordInd");
+  // setActiveWordInd(null);
+  // };
 
   const getSentences = () => {
-    console.log("touched");
     try {
       fetch(
         "http://192.168.0.102:3000",
@@ -89,7 +89,7 @@ export default function HomeScreen() {
           body: JSON.stringify({
             // Convert the payload to a JSON string
             type: "sentences",
-            wordForSentences: activeWordInd !== null && words[activeWordInd],
+            wordForSentences: activeWord !== null && words[activeWord],
           }),
         }
       )
@@ -117,7 +117,7 @@ export default function HomeScreen() {
           body: JSON.stringify({
             // Convert the payload to a JSON string
             type: "definition",
-            wordForDefinition: activeWordInd !== null && words[activeWordInd],
+            wordForDefinition: activeWord !== null && words[activeWord],
           }),
         }
       )
@@ -158,12 +158,6 @@ export default function HomeScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={[buttonStyle.button, { width: "45%" }]}
-              onPress={deleteAll}
-            >
-              <Text style={buttonStyle.buttonText}>Delete All</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[buttonStyle.button, { width: "45%" }]}
               onPress={getDefinition}
             >
               <Text style={buttonStyle.buttonText}>What's this</Text>
@@ -171,8 +165,9 @@ export default function HomeScreen() {
           </View>
           <WordsNavigator
             words={words}
-            activeWordInd={activeWordInd}
-            setActiveWordInd={setActiveWordInd}
+            setWords={setWords}
+            activeWord={activeWord}
+            setActiveWord={setActiveWord}
           />
         </View>
         {gigaResponse.type === "sentences" &&
